@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function HomePage() {
   return (
     <div className="max-w-2xl">
-      <h1 className="text-3xl font-bold mb-2">Automatyczny Grafik</h1>
+      <h1 className="text-3xl font-bold mb-2">Shift Scheduler</h1>
       <p className="text-gray-500 mb-8">
         Kwartalny grafik zmian generowany algorytmem genetycznym, zgodny z polskim prawem pracy
       </p>

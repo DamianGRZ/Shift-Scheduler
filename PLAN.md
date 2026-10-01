@@ -1,8 +1,8 @@
-# Automatyczny Grafik — plan (wersja uproszczona)
+# Shift Scheduler — plan (wersja uproszczona)
 
 ## Kontekst
 Poprzedniego planu nigdzie nie ma: repo nie ma remote'a, a jedyny commit to szablon Next. Obecny kod to ręczny edytor zmian (FullCalendar) z silnikiem walidacji opartym na godzinach. Nowe założenia:
-- nazwa **Automatyczny Grafik**,
+- nazwa **Shift Scheduler** (repo `DamianGRZ/Shift-Scheduler`, wcześniej PlannerWizan → Automatyczny Grafik),
 - grafik kwartalny generowany **algorytmem genetycznym**, z pętlą: stop → popraw → akceptuj → wznów.
 
 Zasada implementacji: jak najmniej plików i abstrakcji, stałe w kodzie zamiast konfiguracji, jedna reprezentacja grafiku.
@@ -28,8 +28,8 @@ Zasada implementacji: jak najmniej plików i abstrakcji, stałe w kodzie zamiast
 - **Urlopy:** wpisuje je użytkownik, a aplikacja podpowiada tygodnie, w których urlop jest możliwy (z uwzględnieniem osoby „na wyurlopowanie”).
 
 ## 1. Nazwa i porządek
-- `package.json` (`automatyczny-grafik`), tytuł i nawigacja w `src/app/layout.tsx`, `src/app/page.tsx`.
-- Plik bazy `automatyczny-grafik.db` w `src/db/index.ts` i `drizzle.config.ts`.
+- `package.json` (`shift-scheduler`), tytuł i nawigacja w `src/app/layout.tsx`, `src/app/page.tsx`.
+- Plik bazy `shift-scheduler.db` w `src/db/index.ts` i `drizzle.config.ts`.
 - Plan zapisany w repo jako `PLAN.md`; commit na nowej gałęzi. Push na GitHuba tylko po Twojej zgodzie.
 
 ## 2. Dane — jedna tabela na grafik (`src/db/schema.ts`)

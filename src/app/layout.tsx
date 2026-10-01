@@ -9,7 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Automatyczny Grafik",
+  title: "Shift Scheduler",
   description: "Automatyczny grafik zmian zgodny z polskim prawem pracy",
 };
 
@@ -29,7 +29,7 @@ export default function RootLayout({
         <nav className="bg-white border-b border-gray-200 px-6 py-3">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-lg font-bold text-blue-600">
-              Automatyczny Grafik
+              Shift Scheduler
             </Link>
             <div className="flex gap-4">
               {NAV_ITEMS.map((item) => (

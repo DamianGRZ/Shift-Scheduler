@@ -4,6 +4,6 @@ export default defineConfig({
   schema: "./src/db/schema.ts",
   dialect: "sqlite",
   dbCredentials: {
-    url: "./automatyczny-grafik.db",
+    url: "./shift-scheduler.db",
   },
 });
