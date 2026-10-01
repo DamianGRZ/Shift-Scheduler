@@ -2,6 +2,10 @@
   "name": "shift-scheduler",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
