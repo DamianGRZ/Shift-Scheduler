@@ -8,15 +8,19 @@ export const employees = sqliteTable("employees", {
   employedTo: text("employed_to"),
 });
 
-export const schedules = sqliteTable("schedules", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  year: integer("year").notNull(),
-  quarter: integer("quarter").notNull(),
-  hoursOverride: integer("hours_override"), // null = 496
-  staff: integer("staff").notNull().default(2), // exact staffing (people per shift) for all days
-  staffOverrides: text("staff_overrides").notNull().default("{}"), // JSON { "YYYY-MM-DD": number } for selected days
-  status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
-});
+export const schedules = sqliteTable(
+  "schedules",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    year: integer("year").notNull(),
+    quarter: integer("quarter").notNull(),
+    hoursOverride: integer("hours_override"), // null = 496
+    staff: integer("staff").notNull().default(2), // exact staffing (people per shift) for all days
+    staffOverrides: text("staff_overrides").notNull().default("{}"), // JSON { "YYYY-MM-DD": number } for selected days
+    status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
+  },
+  (t) => [unique().on(t.year, t.quarter)] // one schedule per quarter
+);
 
 // One schedule cell: an employee's shift code on a given day. locked = user entry or accepted cell.
 export const assignments = sqliteTable(

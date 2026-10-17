@@ -4,8 +4,12 @@ import { z } from "zod";
 
 export const bad = (error = "Nieprawidłowe dane", status = 400) => NextResponse.json({ error }, { status });
 
-/** Body parsed as JSON and validated against the schema; null when the JSON is broken or does not match. */
+/**
+ * Body parsed as JSON and validated against the schema; null when the JSON is broken or does not match.
+ * Only application/json is accepted: other content types are "simple" cross-site requests (CSRF).
+ */
 export async function parseBody<T>(req: Request, schema: z.ZodType<T>): Promise<T | null> {
+  if (!req.headers.get("content-type")?.startsWith("application/json")) return null;
   try {
     const parsed = schema.safeParse(await req.json());
     return parsed.success ? parsed.data : null;

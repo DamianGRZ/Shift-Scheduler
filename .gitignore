@@ -49,3 +49,7 @@ next-env.d.ts
 # claude code (ustawienia lokalne)
 .claude/settings.local.json
 
+
+# desktop launcher
+/logs
+/backups

@@ -170,14 +170,16 @@ export default function SchedulePage({ params }: { params: Promise<{ id: string 
     return true;
   };
 
+  // Leave (U) always stays locked, so the GA and Reset can never overwrite it.
   const lockSelection = (value: boolean) =>
-    update(grid, locked.map((row, e) => row.map((x, d) => (inSelection(e, d) ? value : x))));
+    update(grid, locked.map((row, e) => row.map((x, d) => (inSelection(e, d) && grid[e][d] !== "U" ? value : x))));
 
   const applyLeave = (s: LeaveSuggestion) => {
     const g = grid.map((row) => [...row]);
     const l = locked.map((row) => [...row]);
     for (let d = s.from; d <= s.to; d++) {
-      if (ctx.kinds[d] === "closed" || weekday(ctx.days[d]) === 0) continue;
+      // A week of leave is Monday–Friday; skip weekends and holidays.
+      if (ctx.kinds[d] === "closed" || weekday(ctx.days[d]) === 0 || weekday(ctx.days[d]) === 6) continue;
       g[s.emp][d] = "U";
       l[s.emp][d] = true;
     }

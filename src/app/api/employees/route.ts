@@ -4,12 +4,15 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { bad, intParam, parseBody } from "@/lib/http";
 
-const Employee = z.object({
+const EmployeeFields = z.object({
   name: z.string().trim().min(1).max(100),
   fte: z.number().positive().max(1).default(1),
   employedFrom: z.iso.date().nullable().default(null),
   employedTo: z.iso.date().nullable().default(null),
 });
+const datesInOrder = (e: z.infer<typeof EmployeeFields>) => !e.employedFrom || !e.employedTo || e.employedFrom <= e.employedTo;
+const Employee = EmployeeFields.refine(datesInOrder);
+const EmployeeWithId = EmployeeFields.extend({ id: z.int().positive() }).refine(datesInOrder);
 
 export async function GET() {
   return NextResponse.json(db.select().from(schema.employees).all());
@@ -22,7 +25,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const body = await parseBody(req, Employee.extend({ id: z.int().positive() }));
+  const body = await parseBody(req, EmployeeWithId);
   if (!body) return bad();
   const { id, ...data } = body;
   const result = db.update(schema.employees).set(data).where(eq(schema.employees.id, id)).run();

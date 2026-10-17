@@ -24,8 +24,11 @@ const Body = z.object({
         locked: z.boolean(),
       })
     )
-    .max(50 * 92), // 50 employees × days in a quarter
+    .max(200 * 92), // 200 employees × days in a quarter
 });
+
+// SQLite allows ~32k bound parameters per statement; 6 columns × 500 rows stays well below that.
+const CHUNK = 500;
 
 /** Replaces the whole schedule. Only cells with a code or a lock are stored. */
 export async function PUT(req: NextRequest) {
@@ -44,7 +47,7 @@ export async function PUT(req: NextRequest) {
   const rows = cells.filter((c) => c.code !== "-" || c.locked).map((c) => ({ ...c, scheduleId }));
   db.transaction((tx) => {
     tx.delete(schema.assignments).where(eq(schema.assignments.scheduleId, scheduleId)).run();
-    if (rows.length) tx.insert(schema.assignments).values(rows).run();
+    for (let i = 0; i < rows.length; i += CHUNK) tx.insert(schema.assignments).values(rows.slice(i, i + CHUNK)).run();
   });
   return NextResponse.json({ success: true });
 }
