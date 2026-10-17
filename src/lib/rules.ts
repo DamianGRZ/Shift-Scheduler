@@ -2,7 +2,8 @@
 import { dayKind, weekday, type DayKind } from "./calendar";
 import type { employees } from "@/db/schema";
 
-// D 6:30–18:30, R 6:30–12:30, P 12:30–18:30, N 8–13 (trading Sunday), U leave, - day off
+// D 6:30–18:30, R 6:30–12:30, P 12:30–18:30, N 8–13 (trading Sunday), U leave (8h), - day off
+// (a locked "-" is a day off set by the user, shown as "W")
 type WorkCode = "D" | "R" | "P" | "N";
 export type Code = WorkCode | "U" | "-";
 export type Grid = Code[][]; // [employee][day]
@@ -56,7 +57,9 @@ function shiftTimes(c: WorkCode, kind: DayKind): [number, number] {
   return [start, kind === "holySaturday" ? Math.min(end, 840) : end]; // Holy Saturday: shop closes at 14:00
 }
 
+/** Hours counted for a cell. Leave counts as 8h on a day that would be a working day (Mon–Sat, not a holiday). */
 export function hours(c: Code, kind: DayKind): number {
+  if (c === "U") return kind === "workday" || kind === "holySaturday" ? 8 : 0;
   if (!isWork(c)) return 0;
   const [start, end] = shiftTimes(c, kind);
   return (end - start) / 60;
@@ -90,15 +93,11 @@ export function allowedCodes(ctx: Ctx, e: number, d: number): Code[] {
   return ["-", "R", "P", "D"];
 }
 
-/** Target: 496h × FTE × employed fraction of the quarter, minus 8h per leave day (Mon–Sat, not a holiday). */
-export function targetHours(ctx: Ctx, grid: Grid, e: number): number {
+/** Target: 496h × FTE × employed fraction of the quarter (leave is counted as worked hours, see `hours`). */
+export function targetHours(ctx: Ctx, e: number): number {
   const emp = ctx.employees[e];
   const employedDays = ctx.days.filter((day) => isEmployed(emp, day)).length;
-  const leaveDays = grid[e].filter(
-    (c, d) => c === "U" && ctx.kinds[d] !== "closed" && weekday(ctx.days[d]) !== 0
-  ).length;
-  const base = Math.round((2 * ctx.quarterHours * emp.fte * employedDays) / ctx.days.length) / 2;
-  return Math.max(0, base - 8 * leaveDays);
+  return Math.round((2 * ctx.quarterHours * emp.fte * employedDays) / ctx.days.length) / 2;
 }
 
 export function workedHours(ctx: Ctx, grid: Grid, e: number): number {
@@ -191,7 +190,7 @@ export function check(ctx: Ctx, grid: Grid, locked?: boolean[][]): Violation[] {
     if (decemberWorked > 2) add("december", e, decemberSundays[2], true, decemberWorked - 2);
 
     // Squared deviation: when there are not enough hours for everyone, the shortfall is spread evenly.
-    const diff = Math.abs(workedHours(ctx, grid, e) - targetHours(ctx, grid, e));
+    const diff = Math.abs(workedHours(ctx, grid, e) - targetHours(ctx, e));
     if (diff > 0) add("hours", e, -1, false, (diff * diff) / 10);
   });
 

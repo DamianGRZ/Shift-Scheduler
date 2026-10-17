@@ -31,6 +31,22 @@ it("5 D shifts Mon 12 Oct to Sat 17 Oct exceed 48h and give 3 consecutive 12h sh
   expect(rules).toContain("threeD");
 });
 
+it("leave counts as 8h in the quarter and in the 48h week; day off (W) counts 0h", () => {
+  const ctx = makeCtx(quarterDays(2026, 4), employees.slice(0, 1));
+  const grid = emptyGrid(1, ctx.days.length);
+  const at = (day: string) => ctx.days.indexOf(day);
+  // Mon 12 Oct – Fri 16 Oct: 4 × D (48h) + 1 day of leave (8h) = 56h; Sunday 18 Oct leave counts 0h
+  for (const day of ["2026-10-12", "2026-10-13", "2026-10-15", "2026-10-16"]) grid[0][at(day)] = "D";
+  grid[0][at("2026-10-14")] = "U";
+  grid[0][at("2026-10-18")] = "U";
+  expect(workedHours(ctx, grid, 0)).toBe(56);
+  expect(targetHours(ctx, 0)).toBe(496);
+  expect(check(ctx, grid).some((v) => v.rule === "week48" && v.amount === 8)).toBe(true);
+  grid[0][at("2026-10-14")] = "-"; // locked day off instead of leave
+  expect(workedHours(ctx, grid, 0)).toBe(48);
+  expect(check(ctx, grid).some((v) => v.rule === "week48")).toBe(false);
+});
+
 it("staffing: exactly as many people as set globally or for a given day", () => {
   const days = quarterDays(2026, 4);
   const ctx = makeCtx(days, employees, null, 2, { "2026-10-02": 3 });
@@ -64,6 +80,6 @@ it("GA: no hard violations, even hours, locked genes untouched", () => {
   // Shop hours (~1830h) do not cover 4 × 496h; the rest is leave, and the shortfall must be split evenly.
   const worked = employees.map((_, e) => workedHours(ctx, best, e));
   expect(Math.max(...worked) - Math.min(...worked)).toBeLessThanOrEqual(18); // about one shift of difference
-  expect(worked.every((h, e) => h <= targetHours(ctx, best, e) && h >= 440)).toBe(true);
+  expect(worked.every((h, e) => h <= targetHours(ctx, e) && h >= 440)).toBe(true);
   expect(best[0][0]).toBe("U");
 }, 120_000);

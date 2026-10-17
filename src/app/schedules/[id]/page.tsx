@@ -146,11 +146,12 @@ export default function SchedulePage({ params }: { params: Promise<{ id: string 
     d <= Math.max(selection.d0, selection.d1);
 
   // Keyboard: D/R/P/N/U writes the code with a lock into the selected cells (only where allowed);
-  // Delete/Backspace clears and unlocks. Other keys are ignored.
+  // W sets a locked day off (no leave); Delete/Backspace clears and unlocks. Other keys are ignored.
   const typeCode = (key: string) => {
-    const code = key.toUpperCase() as Code;
+    const upper = key.toUpperCase();
+    const code = (upper === "W" ? "-" : upper) as Code;
     const clear = key === "Delete" || key === "Backspace";
-    if (!selection || running || (!clear && !"DRPNU".includes(code))) return false;
+    if (!selection || running || (!clear && !"DRPNUW".includes(upper))) return false;
     const g = grid.map((row) => [...row]);
     const l = locked.map((row) => [...row]);
     grid.forEach((row, e) =>
@@ -159,7 +160,7 @@ export default function SchedulePage({ params }: { params: Promise<{ id: string 
         if (clear) {
           g[e][d] = "-";
           l[e][d] = false;
-        } else if (code === "U" || allowedCodes(ctx, e, d).includes(code)) {
+        } else if (code === "U" || code === "-" || allowedCodes(ctx, e, d).includes(code)) {
           g[e][d] = code;
           l[e][d] = true;
         }
@@ -267,9 +268,9 @@ export default function SchedulePage({ params }: { params: Promise<{ id: string 
       )}
 
       <p className="text-xs text-gray-500 mb-2">
-        D 6:30–18:30 · R 6:30–12:30 · P 12:30–18:30 · N niedziela 8–13 · U urlop. Zaznacz komórkę (lub przeciągnij zakres)
-        i wpisz literę z klawiatury — kod zostaje zablokowany 🔒; Delete czyści i odblokowuje. Dwuklik przełącza kody po kolei
-        (po U wraca do pustej, odblokowanej).
+        D 6:30–18:30 · R 6:30–12:30 · P 12:30–18:30 · N niedziela 8–13 · U urlop (liczony jako 8h) · W dzień wolny bez
+        urlopu. Zaznacz komórkę (lub przeciągnij zakres) i wpisz literę z klawiatury — kod zostaje zablokowany 🔒; Delete
+        czyści i odblokowuje. Dwuklik przełącza kody po kolei (po U wraca do pustej, odblokowanej).
       </p>
 
       <div
@@ -293,7 +294,7 @@ export default function SchedulePage({ params }: { params: Promise<{ id: string 
           <tbody>
             {grid.map((row, e) => {
               const worked = workedHours(ctx, grid, e);
-              const target = targetHours(ctx, grid, e);
+              const target = targetHours(ctx, e);
               return (
                 <tr key={ctx.employees[e].id}>
                   <td className="sticky left-0 bg-white p-1 whitespace-nowrap font-medium">{ctx.employees[e].name}</td>
@@ -314,7 +315,7 @@ export default function SchedulePage({ params }: { params: Promise<{ id: string 
                         badCells.has(`${e}:${d}`) ? "border-red-500 border-2" : "border-gray-200"
                       } ${inSelection(e, d) ? "outline-2 outline-blue-500" : ""} ${ctx.kinds[d] === "closed" && code === "-" ? "bg-gray-100" : ""}`}
                     >
-                      {code === "-" ? "" : code}
+                      {code !== "-" ? code : locked[e][d] ? "W" : ""}
                       {locked[e][d] && <span className="text-[8px]">🔒</span>}
                     </td>
                   ))}
